@@ -7,7 +7,8 @@ from tabulate import tabulate
 from InquirerPy.base import Choice
 
 
-def getid(selectedanimeurl, animename, animeid):
+def getid(selectedanimeurl, animename):
+    animeid = ""
     url = selectedanimeurl
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0",
@@ -22,13 +23,15 @@ def getid(selectedanimeurl, animename, animeid):
         if findanimeid:
             animeid = findanimeid['value']
             print("Found ID:", animeid)
-            makehtml(animename, animeid)
         else:
             print("ID NOT FOUND")
     else:
         print(f"Error: {response.status_code}")
 
-def makehtml(animename, animeid):
+    return animeid
+
+
+def makehtml(animename, animeid, image, description):
     htmlanime = f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -46,8 +49,6 @@ def makehtml(animename, animeid):
             align-items: center;
             overflow: hidden;
             transition: background-color 0.3s ease;
-        }}
-        body.dark-mode {{
             background-color: #111;
             color: #fff;
         }}
@@ -59,7 +60,7 @@ def makehtml(animename, animeid):
             font-size: 40px;
             text-align: center;
             position: absolute;
-            top: 0px;
+            top: 0;
             left: 50%;
             transform: translateX(-50%);
         }}
@@ -68,6 +69,7 @@ def makehtml(animename, animeid):
             height: 80%;
             max-width: 800px;
             max-height: 600px;
+            position: relative;
         }}
         iframe {{
             width: 100%;
@@ -107,9 +109,33 @@ def makehtml(animename, animeid):
             font-size: 12px;
             color: #aaa;
         }}
+        #anime-image {{
+            position: absolute;
+            top: 50px; 
+            left: 50px; 
+            max-width: 400px; 
+            max-height: 400px; 
+        }}
+        #description-box {{
+            position: absolute;
+            top: calc(50px + 400px + 20px);
+            left: 50px;
+            width: 260px;
+            height: 300px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+        }}
+        #description-text {{
+            font-size: 16px;
+            color: #fff;
+            overflow-wrap: break-word;
+        }}
     </style>
 </head>
 <body class="dark-mode">
+    <img id="anime-image" src="{image}" alt="{animename} Poster">
     <h1 id="anime-title">{animename}</h1>
     <button id="dark-mode-toggle" onclick="toggleDarkMode()">Dark Mode</button>
     <div id="iframe-container">
@@ -120,6 +146,11 @@ def makehtml(animename, animeid):
     </div>
     <div id="text-id">
         ID: {animeid}
+    </div>
+    <div id="description-box">
+        <div id="description-text">
+            {description}
+        </div>
     </div>
 
     <script>
@@ -136,8 +167,8 @@ def makehtml(animename, animeid):
     animefolder = "animes"
     os.makedirs(animefolder, exist_ok=True)
     filename = os.path.join(animefolder, f"{animename}.html")
-    with open(filename, "w") as html_file:
-        html_file.write(htmlanime)
+    with open(filename, "w", encoding="utf-8") as htmlfile:
+        htmlfile.write(htmlanime)
     webbrowser.open_new_tab(filename)
 
 def searchanime():
@@ -187,8 +218,62 @@ def searchanime():
         print("Error searching for anime:", response.status_code)
         return None
 
+def getimageurl(url):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0",
+    }
+
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        print("Searching for Image URL")
+        soup = BeautifulSoup(response.content, 'html.parser')
+        ogimgtag = soup.find('meta', {'property': 'og:image'})
+        if ogimgtag and 'content' in ogimgtag.attrs:
+            imageurl = ogimgtag['content']
+            image = "https://www.anilibria.tv" + imageurl
+            print("Found image source")
+            print(image)
+            return image
+        else:
+            print("Image URL not found in metadata.")
+            return None
+    else:
+        print(f"Error: {response.status_code}")
+        return None
+
+def getdescription(url):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0",
+    }
+
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        print("Searching for Description")
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        finddescr = soup.find('textarea', {'id': 'nDescription'})
+        if finddescr:
+            description = finddescr.text.strip()
+            print("Found description")
+            print(description)
+            return description
+        else:
+            print("Description not found.")
+            return None
+    else:
+        print(f"Error: {response.status_code}")
+        return None
+
 if __name__ == "__main__":
     selectedanime = searchanime()
     if selectedanime:
         animename, selectedanimeurl = selectedanime
-        getid(selectedanimeurl, animename, "001")
+        animeid = getid(selectedanimeurl, animename)
+        image = getimageurl(selectedanimeurl)
+        description = getdescription(selectedanimeurl)
+        if animeid and image and description:
+            makehtml(animename, animeid, image, description)
+        else:
+            print("Error getting Info.")
