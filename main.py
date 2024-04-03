@@ -45,8 +45,9 @@ def makehtml(animename, animeid, image, description):
             width: 100%;
             height: 100%;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
             overflow: hidden;
             transition: background-color 0.3s ease;
             background-color: #111;
@@ -59,17 +60,17 @@ def makehtml(animename, animeid, image, description):
         #anime-title {{
             font-size: 40px;
             text-align: center;
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
+            margin-top: 20px;
         }}
         #iframe-container {{
-            width: 80%;
-            height: 80%;
-            max-width: 800px;
-            max-height: 600px;
-            position: relative;
+            max-width: 1000px;
+            max-height: 700px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 1px;
         }}
         iframe {{
             width: 100%;
@@ -92,65 +93,67 @@ def makehtml(animename, animeid, image, description):
             color: #fff;
         }}
         #github-link {{
+            font-size: 12px;
+            color: #aaa;
             position: absolute;
             bottom: 10px;
             left: 10px;
-            font-size: 12px;
-            color: #aaa;
         }}
         #github-link a {{
             color: #aaa;
             text-decoration: none;
         }}
         #text-id {{
+            font-size: 12px;
+            color: #aaa;
             position: absolute;
             bottom: 10px;
             right: 10px;
-            font-size: 12px;
-            color: #aaa;
         }}
         #anime-image {{
+            max-width: 350px;
+            max-height: 460px;
             position: absolute;
-            top: 50px; 
-            left: 50px; 
-            max-width: 400px; 
-            max-height: 400px; 
+            top: 50px;
+            left: 50px;
         }}
         #description-box {{
-            position: absolute;
-            top: calc(50px + 400px + 20px);
-            left: 50px;
-            width: 260px;
-            height: 300px;
+            width: 325px;
+            height: 500px;
             background-color: rgba(0, 0, 0, 0.5);
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            position: absolute;
+            top: 520px;
+            left: 50px;
+            overflow: hidden;
         }}
         #description-text {{
             font-size: 16px;
             color: #fff;
-            overflow-wrap: break-word;
+            overflow-y: auto;
+            height: 100%;
         }}
     </style>
 </head>
 <body class="dark-mode">
-    <img id="anime-image" src="{image}" alt="{animename} Poster">
     <h1 id="anime-title">{animename}</h1>
     <button id="dark-mode-toggle" onclick="toggleDarkMode()">Dark Mode</button>
     <div id="iframe-container">
         <iframe src="https://www.anilibria.tv/public/iframe.php?id={animeid}" frameborder="0" allowfullscreen sandbox="allow-same-origin allow-scripts"></iframe>
+    </div>
+    <img id="anime-image" src="{image}" alt="{animename} Poster">
+    <div id="description-box">
+        <div id="description-text">
+            {description}
+        </div>
     </div>
     <div id="github-link">
         <a href="https://github.com/HWYkagiru/" target="_blank">https://github.com/HWYkagiru/</a>
     </div>
     <div id="text-id">
         ID: {animeid}
-    </div>
-    <div id="description-box">
-        <div id="description-text">
-            {description}
-        </div>
     </div>
 
     <script>
@@ -163,7 +166,8 @@ def makehtml(animename, animeid, image, description):
         }}
     </script>
 </body>
-</html>'''
+</html>
+'''
     animefolder = "animes"
     os.makedirs(animefolder, exist_ok=True)
     filename = os.path.join(animefolder, f"{animename}.html")
